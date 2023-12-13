@@ -14,6 +14,8 @@ class Album(BaseUUIDModel, AlbumBase, table=True):
     tracks: list["Track"] = Relationship( 
         back_populates="album"
     )
+
+
     created_by_id: UUID | None = Field(default=None, foreign_key="User.id")
     created_by: User | None = Relationship( 
         sa_relationship_kwargs={

@@ -11,6 +11,8 @@ from app.api.v1.endpoints import (
     weather,
     report,
     periodic_tasks,
+    album,
+    track
 )
 
 api_router = APIRouter()
@@ -29,3 +31,9 @@ api_router.include_router(
 api_router.include_router(
     periodic_tasks.router, prefix="/periodic_tasks", tags=["periodic_tasks"]
 )
+
+# NEW - ALBUM
+api_router.include_router(album.router, prefix="/album", tags=['album'])
+
+# NEW - TRACK
+api_router.include_router(track.router, prefix="/track", tags=['track'])

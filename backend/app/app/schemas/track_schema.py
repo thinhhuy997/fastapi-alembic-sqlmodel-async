@@ -23,5 +23,5 @@ class ITrackRead(TrackBase):
     id: UUID
 
 
-class IHeroReadWithTeam(ITrackRead):
+class ITrackReadWithAlbum(ITrackRead):
     album: AlbumBase | None

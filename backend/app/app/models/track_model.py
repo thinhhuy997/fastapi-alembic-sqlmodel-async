@@ -9,7 +9,7 @@ class TrackBase(SQLModel):
     duration: int
 
 class Track(BaseUUIDModel, TrackBase, table=True):
-    album_id: Optional[int] = Field(default=None, foreign_key="album.id")
+    album_id: UUID | None = Field(default=None, foreign_key="Album.id")
     album: "Album" = Relationship(
         back_populates="tracks"
     )

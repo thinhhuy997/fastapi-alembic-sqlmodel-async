@@ -21,5 +21,5 @@ class IAlbumRead(AlbumBase):
     created_by: IUserBasicInfo
 
 
-class IAlbumReadWithHeroes(IAlbumRead):
-    heroes: list[TrackBase]
+class IAlbumReadWithTrack(IAlbumRead):
+    tracks: list[TrackBase]
