@@ -32,7 +32,7 @@ router = APIRouter()
 async def get_albums_list(
     params: Params = Depends(),
     current_user: User = Depends(deps.get_current_user()),
-) -> IGetResponsePaginated[IAlbumRead]:
+) -> IGetResponsePaginated[IAlbumReadWithTrack]:
     """
     Gets a paginated list of albums
     """
@@ -50,7 +50,7 @@ async def get_album_by_id(
     """
     album = await crud.album.get(id = album_id)
     if not album:
-        raise IdNotFoundException(album, id = album_id)
+        raise IdNotFoundException(Album, id = album_id)
     return create_response(data=album)
 
 @router.post("", status_code=status.HTTP_201_CREATED)

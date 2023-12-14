@@ -7,6 +7,13 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 
 class CRUDTrack(CRUDBase[Track, ITrackCreate, ITrackUpdate]):
+    # async def create(self, allbumId: str):
+    #     album = albumCRUD.find_id(allbumId):
+    #     if not album:
+
+    #     super().create()
+
+
     async def get_track_by_name(
         self, *, name: str, db_session: AsyncSession | None = None
     ) -> Track:
@@ -39,4 +46,24 @@ class CRUDTrack(CRUDBase[Track, ITrackCreate, ITrackUpdate]):
         value = count.scalar_one_or_none()
         return value
     
+
+    # NEW
+    async def get_tracks_by_album_id(
+        self, *, album_id: str, db_session: AsyncSession | None = None
+    ) -> Track:
+        db_session = db_session or super().get_db().session
+        track = await db_session.execute(
+            select(Track).where(Track.album_id==album_id)
+        )
+        return track.scalars().all()
+
+    # NEW
+    async def get_tracks_by_user_id(
+        self, user_id: str, *, db_session: AsyncSession | None = None
+    ) -> Track:
+        db_session = db_session or super().get_db().session
+        tracks = await db_session.execute(
+            select(Track).where(Track.created_by_id==user_id)
+        )
+        return tracks.scalars().all()
 track = CRUDTrack(Track)

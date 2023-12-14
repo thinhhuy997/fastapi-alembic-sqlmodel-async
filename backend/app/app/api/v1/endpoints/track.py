@@ -6,6 +6,7 @@ from fastapi_pagination import Params
 from app import crud
 from app.api import deps
 from app.models.track_model import Track
+from app.models.album_model import Album
 from app.models.user_model import User
 from app.schemas.common_schema import IOrderEnum
 from app.schemas.track_schema import (
@@ -32,11 +33,29 @@ router = APIRouter()
 async def get_track_list(
     params: Params = Depends(),
     current_user: User = Depends(deps.get_current_user()),
-) -> IGetResponsePaginated[ITrackReadWithAlbum]:
+) -> IGetResponseBase[list[ITrackReadWithAlbum]]:
     """
     Gets a paginated list of tracks
     """
-    tracks = await crud.track.get_multi_paginated(params=params)
+
+    if current_user.is_superuser:
+        tracks = await crud.track.get_multi()
+    else:
+        tracks = await crud.track.get_tracks_by_user_id(user_id=current_user.id)
+    return create_response(data=tracks)
+
+@router.get("/list-track-by-album-id/{album_id}")
+async def list_tracks_by_album_id(
+    album_id: UUID,
+) -> IGetResponseBase[list[ITrackReadWithAlbum]]:
+    
+    album = await crud.album.get(id=album_id)
+   
+    if not album:
+        raise IdNotFoundException(Album, album_id)
+
+    # function get_tracks_by_album_id is a custom function from track_crud.py
+    tracks = await crud.track.get_tracks_by_album_id(album_id=album_id)
     return create_response(data=tracks)
 
 @router.get("/get_by_id/{track_id}")
@@ -67,8 +86,42 @@ async def create_track(
     - admin
     - manager
     """
+    if track.duration <= 0:
+        raise HTTPException(
+            status_code=400,
+            detail= "Invalid Duration"
+        )
     created_track = await crud.track.create(obj_in=track, created_by_id=current_user.id)
     return create_response(data=created_track)
+
+@router.put("/{track_id}")
+async def update_track(
+    track_id: UUID,
+    track_input: ITrackUpdate,
+    current_user: User = Depends(
+        deps.get_current_user(required_roles=[IRoleEnum.admin, IRoleEnum.manager])
+    ),
+) -> IPutResponseBase[ITrackRead]:
+    """
+    Updates a track by its id
+
+    Required roles:
+    - admin
+    - manager
+    """
+    current_track = await crud.track.get(id=track_id)
+    if not current_track:
+        raise IdNotFoundException("Track", track_id)
+
+    # Only the track owner can update their track
+    if current_user.id != current_track.created_by_id:
+        raise HTTPException(
+            status_code=403,
+            detail="You are not Authorized to update this track because you did not created it"
+        )
+
+    track_updated = await crud.hero.update(obj_new=track_input, obj_current=current_track)
+    return create_response(data=track_updated)
 
 @router.delete("/{track_id}")
 async def remove_track(
@@ -87,8 +140,15 @@ async def remove_track(
     current_track = await crud.track.get(id = track_id)
     if not current_track:
         raise IdNotFoundException(Track, track_id)
-    track = await crud.track.remove(id=track_id)
-    return create_response(data=track)
+    
+    if current_user.id != current_track.created_by_id:
+        raise HTTPException(
+            status_code=403,
+            detail="You are not Authorized to delete this track because you did not created it"
+        )
+
+    deleted_track = await crud.track.remove(id=track_id)
+    return create_response(data=deleted_track)
 
 @router.delete("/")
 async def remove_all_tracks(
@@ -105,3 +165,6 @@ async def remove_all_tracks(
     """
     tracks = await crud.track.remove_all()
     return create_response(data={})
+
+
+
