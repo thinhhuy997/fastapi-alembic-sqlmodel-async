@@ -6,12 +6,13 @@ from typing import Optional
 class TrackBase(SQLModel):
     title: str = Field(index=True)
     order: int
-    duration: int
+    duration: int | None = Field(default=None, index=True)
+    album_id: UUID | None = Field(default=None, foreign_key="Album.id")
 
 class Track(BaseUUIDModel, TrackBase, table=True):
-    album_id: UUID | None = Field(default=None, foreign_key="Album.id")
+    
     album: "Album" = Relationship(
-        back_populates="tracks"
+        back_populates="tracks", sa_relationship_kwargs={"lazy": "joined"}
     )
 
     created_by_id: UUID | None = Field(default=None, foreign_key="User.id")

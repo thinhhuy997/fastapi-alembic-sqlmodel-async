@@ -12,7 +12,7 @@ class AlbumBase(SQLModel):
 
 class Album(BaseUUIDModel, AlbumBase, table=True):
     tracks: list["Track"] = Relationship( 
-        back_populates="album"
+        back_populates="album",  sa_relationship_kwargs={"lazy": "selectin"}
     )
 
 

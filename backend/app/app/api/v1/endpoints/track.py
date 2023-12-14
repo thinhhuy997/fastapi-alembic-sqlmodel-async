@@ -67,5 +67,41 @@ async def create_track(
     - admin
     - manager
     """
-    track = await crud.track.create(obj_in=track, created_by_id=current_user.id)
+    created_track = await crud.track.create(obj_in=track, created_by_id=current_user.id)
+    return create_response(data=created_track)
+
+@router.delete("/{track_id}")
+async def remove_track(
+    track_id: UUID,
+    current_user: User = Depends (
+        deps.get_current_user(required_roles=[IRoleEnum.admin, IRoleEnum.manager])
+    )
+) -> IDeleteResponseBase[ITrackRead]:
+    """
+    Deletes a track by its id
+
+    Required roles:
+    - admin
+    - manager
+    """
+    current_track = await crud.track.get(id = track_id)
+    if not current_track:
+        raise IdNotFoundException(Track, track_id)
+    track = await crud.track.remove(id=track_id)
     return create_response(data=track)
+
+@router.delete("/")
+async def remove_all_tracks(
+    current_user: User = Depends (
+        deps.get_current_user(required_roles=[IRoleEnum.admin, IRoleEnum.manager])
+    )
+) -> IDeleteResponseBase[ITrackRead]:
+    """
+    Deletes a track by its id
+
+    Required roles:
+    - admin
+    - manager
+    """
+    tracks = await crud.track.remove_all()
+    return create_response(data={})

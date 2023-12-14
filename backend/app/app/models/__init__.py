@@ -8,7 +8,7 @@ from .image_media_model import ImageMedia
 from .user_follow_model import UserFollow
 
 # NEW
+# from .team_hero_test_model import Member
+# from .team_hero_test_model import Home
 from .track_model import Track
 from .album_model import Album
-from .team_hero_test_model import Member
-from .team_hero_test_model import Home

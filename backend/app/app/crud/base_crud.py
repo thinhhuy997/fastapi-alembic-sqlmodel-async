@@ -207,3 +207,18 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         await db_session.delete(obj)
         await db_session.commit()
         return obj
+    
+
+
+    # NEW
+    async def remove_all(
+        self, *, id: UUID | str, db_session: AsyncSession | None = None
+    ) -> ModelType:
+        db_session = db_session or self.db.session
+        response = await db_session.execute(
+            select(self.model)
+        )
+        objs = response.scalar_one()
+        await db_session.delete(objs)
+        await db_session.commit()
+        return objs
