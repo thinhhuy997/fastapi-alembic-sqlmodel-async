@@ -1,8 +1,9 @@
 from uuid import UUID
 from app.api.celery_task import print_hero
 from app.utils.exceptions import IdNotFoundException, NameNotFoundException
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Body
 from fastapi_pagination import Params
+from typing import Annotated
 from app import crud
 from app.api import deps
 from app.models.track_model import Track
@@ -13,7 +14,8 @@ from app.schemas.track_schema import (
     ITrackCreate,
     ITrackRead,
     ITrackReadWithAlbum,
-    ITrackUpdate
+    ITrackUpdate,
+    ITrackIds
 )
 from app.schemas.response_schema import (
     IDeleteResponseBase,
@@ -35,7 +37,7 @@ async def get_track_list(
     current_user: User = Depends(deps.get_current_user()),
 ) -> IGetResponseBase[list[ITrackReadWithAlbum]]:
     """
-    Gets a paginated list of tracks
+    Gets a list of tracks
     """
 
     if current_user.is_superuser:
@@ -43,6 +45,18 @@ async def get_track_list(
     else:
         tracks = await crud.track.get_tracks_by_user_id(user_id=current_user.id)
     return create_response(data=tracks)
+
+@router.post("/list-by-ids")
+async def List_tracks_by_ids(
+    list_ids: ITrackIds
+) -> {}:
+# IGetResponseBase[list[ITrackRead]]:
+    """
+    Gets a paginated list of tracks by list of ids
+    """
+    tracks = await crud.track.get_by_ids(list_ids=list_ids)
+
+    return create_response(data = tracks)
 
 @router.get("/list-track-by-album-id/{album_id}")
 async def list_tracks_by_album_id(
@@ -140,14 +154,24 @@ async def remove_track(
     current_track = await crud.track.get(id = track_id)
     if not current_track:
         raise IdNotFoundException(Track, track_id)
-    
-    if current_user.id != current_track.created_by_id:
+        
+    # if (not current_user.is_superuser) and (current_user.id != current_track.created_by_id):
+    #     raise HTTPException(
+    #         status_code=403,
+    #         detail="You are not Authorized to delete this track because you did not created it"
+    #     )
+
+    """
+    Admin can delete all tracks, but users can only delete tracks they own
+    """
+    if current_user.is_superuser or current_user.id == current_track.created_by_id:
+        deleted_track = await crud.track.remove(id=track_id)
+    else:
         raise HTTPException(
             status_code=403,
             detail="You are not Authorized to delete this track because you did not created it"
         )
 
-    deleted_track = await crud.track.remove(id=track_id)
     return create_response(data=deleted_track)
 
 @router.delete("/")
@@ -168,3 +192,4 @@ async def remove_all_tracks(
 
 
 
+    

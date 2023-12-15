@@ -3,6 +3,7 @@ from app.models.album_model import AlbumBase
 from app.utils.partial import optional
 from uuid import UUID
 from pydantic import field_validator
+from sqlmodel import Field, Relationship, SQLModel
 
 
 class ITrackCreate(TrackBase):
@@ -25,3 +26,7 @@ class ITrackRead(TrackBase):
 
 class ITrackReadWithAlbum(ITrackRead):
     album: AlbumBase | None
+
+# New
+class ITrackIds(SQLModel):
+    list_ids: list[str]
