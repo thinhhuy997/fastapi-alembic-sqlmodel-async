@@ -191,5 +191,9 @@ async def remove_all_tracks(
     return create_response(data={})
 
 
+@router.get("/test-git")
+async def test_git_or_something_like_that(
 
-    
+) -> {}:
+    return create_response(data={})
+
